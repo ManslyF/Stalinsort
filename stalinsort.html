@@ -60,7 +60,9 @@
   @keyframes flash-red   { 0%{background:rgba(180,0,0,.5);opacity:1;}  100%{background:rgba(180,0,0,0);opacity:0;} }
 
   /* ── OVERLAYS ── */
-  .overlay { position:fixed; inset:0; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(6,0,0,.94); backdrop-filter:blur(6px); overflow-y:auto; padding:clamp(8px,2vh,20px) clamp(10px,3vw,20px); }
+  .overlay { position:fixed; inset:0; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; background:rgba(6,0,0,.94); backdrop-filter:blur(6px); overflow-y:auto; padding:clamp(8px,2vh,20px) clamp(10px,3vw,20px); }
+  /* Wrapper zentriert Inhalt wenn er reinpasst, ermöglicht Scrollen wenn nicht */
+  .overlay-inner { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; min-height:100%; }
   .overlay.hidden { display:none; }
   .overlay-title { font-family:'Oswald',sans-serif; font-size:clamp(28px,6vw,54px); color:var(--gold); letter-spacing:clamp(3px,1vw,6px); text-align:center; text-shadow:0 0 40px #d4a01755; margin-bottom:4px; }
   .overlay-stats { display:flex; flex-wrap:wrap; justify-content:center; gap:clamp(8px,1.5vw,22px); margin-top:clamp(6px,1.2vh,12px); margin-bottom:clamp(8px,1.5vh,18px); }
@@ -71,8 +73,8 @@
   .stat-box.bad  .value { color:var(--red); }
   .stat-box.info .value { color:var(--gold); }
   #go-speed-info { font-family:'Special Elite',cursive; font-size:clamp(9px,1.5vw,11px); letter-spacing:clamp(1px,0.4vw,3px); color:var(--gold); opacity:.45; margin-bottom:clamp(8px,1.5vh,20px); text-align:center; }
-  #go-fuersp { display:flex; gap:clamp(5px,1vw,10px); margin-bottom:clamp(8px,1.5vh,20px); }
-  #go-fuersp .fuersp-big { width:clamp(28px,4.5vw,46px); height:clamp(36px,5.6vw,58px); }
+  #go-fuersp { display:flex; gap:clamp(5px,1vw,10px); margin-bottom:clamp(4px,1vh,20px); }
+  #go-fuersp .fuersp-big { width:clamp(22px,5.5vh,46px); height:clamp(28px,7vh,58px); }
   #go-fuersp .fuersp-big.lost { filter:grayscale(1) brightness(0.2); opacity:.25; }
   .btn-restart { background:var(--red); border:none; color:var(--cream); font-family:'Oswald',sans-serif; font-size:clamp(12px,2vw,17px); letter-spacing:clamp(2px,0.8vw,6px); padding:clamp(8px,1.5vh,12px) clamp(20px,4vw,42px); cursor:pointer; text-transform:uppercase; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%); transition:background .2s,transform .1s; }
   .btn-restart:hover { background:var(--dark-red); transform:scale(1.04); }
@@ -95,14 +97,12 @@
     .overlay-stats { gap:6px; margin-top:4px; margin-bottom:6px; }
     .stat-box { padding:4px 10px; }
     .stat-box .value { font-size:clamp(18px,3.5vw,28px); }
-    #go-fuersp { margin-bottom:6px; }
-    #go-fuersp .fuersp-big { width:clamp(22px,3.5vw,34px); height:clamp(28px,4.4vw,43px); }
+    #go-fuersp { margin-bottom:4px; }
+    #go-fuersp .fuersp-big { width:clamp(18px,4vh,30px); height:clamp(23px,5vh,38px); }
     #go-speed-info { margin-bottom:6px; font-size:9px; }
     .btn-restart { padding:6px 20px; font-size:clamp(11px,1.8vw,14px); letter-spacing:3px; }
     #go-medal-award { font-size:13px !important; margin-bottom:4px !important; }
     .overlay-hint { margin-top:4px; }
-    /* Overlay im Landscape: horizontal zwei Spalten wenn genug Breite */
-    #gameover-overlay { justify-content:flex-start; padding-top:8px; }
   }
 </style>
 </head>
@@ -112,6 +112,7 @@
 
 <!-- START -->
 <div class="overlay" id="start-overlay">
+ <div class="overlay-inner">
   <div class="overlay-title">STALINSORT</div>
   <div class="overlay-sub">Genosse Stalin hat dir eine sehr wichtige Aufgabe übertragen: Du mußt Zahlen in der richtigen Reihenfolge sortieren! Um die Sache nicht zu kompliziert zu machen - denn komplizierte Sachen mag Genosse Stalin nicht - sollt du diejenigen Zahlen, die aus der Reihe tanzen, einfach eliminieren. Denn ein paar Zahlen mehr oder weniger, wen kümmert das schon! Es gibt ja genügend davon. Mach deine Aufgabe gut, ansonsten könnte Stalin mutmaßen dass du ein ausländischer Agent bist und dann wird er dich beseitigen lassen... Aber halt, da habe ich jetzt etwas durcheinandergebracht. Das mit den ausländischen Agenten war ein anderer großartiger Staatsmann, an dessen Namen ich mich leider gerade nicht erinnere. Wie auch immer:</div>
   
@@ -125,10 +126,12 @@
   </div>
   <button class="btn-restart" onclick="startGame()">Spiel starten</button>
   <div class="overlay-hint">oder LEERTASTE drücken</div>
+ </div>
 </div>
 
 <!-- ROUND / GAME OVER -->
 <div class="overlay hidden" id="gameover-overlay">
+ <div class="overlay-inner">
   <div class="overlay-title" id="go-title">RUNDE VORBEI</div>
   <div class="overlay-sub" id="go-sub">— Ergebnis —</div>
   <div class="overlay-stats">
@@ -137,12 +140,13 @@
     <div class="stat-box bad" ><div class="label">FEHLER</div> <div class="value" id="go-wrong">0</div></div>
     <div class="stat-box info" id="go-medal-box" style="display:none"><div class="label">MEDAILLEN</div><div class="value" id="go-medals">0</div></div>
   </div>
-  <div id="go-medal-award" style="display:none; font-family:'Special Elite',cursive; font-size:18px; color:var(--gold); letter-spacing:4px; margin-bottom:12px; text-align:center;"></div>
+  <div id="go-medal-award" style="display:none; font-family:'Special Elite',cursive; font-size:clamp(12px,2.5vw,18px); color:var(--gold); letter-spacing:4px; margin-bottom:8px; text-align:center;"></div>
   <div id="go-fuersp"></div>
   <div id="go-speed-info"></div>
   <button class="btn-restart" id="go-btn" onclick="nextRound()">Nächste Runde ▶</button>
   <button class="btn-restart" id="go-btn2" style="display:none; margin-top:10px; background:#555;" onclick="startGame()">Neu starten</button>
   <div class="overlay-hint" id="go-hint">oder LEERTASTE drücken</div>
+ </div>
 </div>
 
 <!-- HUD -->
@@ -243,55 +247,55 @@
   let enterAction = null;
 
   // ─────────────────────────────────────────────────
-  // FÜRSPRECHER-SVG: Alter sowjetischer Politbüro-Mann
-  // Ohne Mütze — kahler/weißhaariger Kopf + Uniform + Orden
+  // FÜRSPRECHER-SVG: Sowjetischer Politbüro-Mann mit Mütze
   // ─────────────────────────────────────────────────
   function fuerspSVG(w=32, h=40) {
     return `<svg width="${w}" height="${h}" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
-      <!-- Glatze / weißes Haar an Seiten -->
-      <ellipse cx="16" cy="8" rx="8" ry="8" fill="#d4a474"/>
-      <ellipse cx="7"  cy="9"  rx="3" ry="5" fill="#e8e0d0"/>
-      <ellipse cx="25" cy="9"  rx="3" ry="5" fill="#e8e0d0"/>
-      <!-- Gesicht -->
+      <!-- Kopf -->
+      <ellipse cx="16" cy="10.82" rx="8" ry="5.18" fill="#d4a474"/>
       <ellipse cx="16" cy="15" rx="7.5" ry="8" fill="#d4a474"/>
       <!-- Stirnfalten -->
       <path d="M10 11 Q16 10 22 11" stroke="#b8855a" stroke-width=".7" fill="none"/>
       <path d="M11 12.5 Q16 11.5 21 12.5" stroke="#b8855a" stroke-width=".5" fill="none"/>
-      <!-- Augen (zusammengekniffen, alt) -->
+      <!-- Augen -->
       <ellipse cx="13" cy="14" rx="1.8" ry="1.2" fill="#2a1a0a"/>
       <ellipse cx="19" cy="14" rx="1.8" ry="1.2" fill="#2a1a0a"/>
       <line x1="11.5" y1="13" x2="14.5" y2="13" stroke="#2a1a0a" stroke-width=".9"/>
       <line x1="17.5" y1="13" x2="20.5" y2="13" stroke="#2a1a0a" stroke-width=".9"/>
       <!-- Nase -->
       <ellipse cx="16" cy="16.5" rx="1.8" ry="2" fill="#c4906a"/>
-      <!-- Schnurrbart (sowjetisch!) -->
-      <path d="M12 19 Q14 18 16 18.5 Q18 18 20 19" stroke="#555" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-      <!-- Wangen-Falten -->
+      <!-- Wangenfalten -->
       <path d="M10 16 Q9 18 10 20" stroke="#b8855a" stroke-width=".6" fill="none"/>
       <path d="M22 16 Q23 18 22 20" stroke="#b8855a" stroke-width=".6" fill="none"/>
-      <!-- Mund (grimmig) -->
+      <!-- Mund -->
       <path d="M13.5 21 Q16 20 18.5 21" stroke="#a06040" stroke-width=".9" fill="none"/>
       <!-- Ohren -->
-      <ellipse cx="8.5"  cy="15" rx="1.8" ry="2.5" fill="#c8906a"/>
+      <ellipse cx="8.5" cy="15" rx="1.8" ry="2.5" fill="#c8906a"/>
       <ellipse cx="23.5" cy="15" rx="1.8" ry="2.5" fill="#c8906a"/>
       <!-- Hals -->
       <rect x="13" y="22" width="6" height="3" rx="1" fill="#d4a474"/>
-      <!-- Uniformmantel (dunkelgrün/grau) -->
+      <!-- Uniform -->
       <path d="M4 40 L4 28 Q8 24 16 24 Q24 24 28 28 L28 40 Z" fill="#2a3520"/>
-      <!-- Uniformkragen -->
       <path d="M13 24 L16 29 L19 24" stroke="#4a5540" stroke-width=".8" fill="#1a2510"/>
-      <!-- Orden 1 (Gold) -->
+      <!-- Orden Gold -->
       <circle cx="10" cy="32" r="2.8" fill="#d4a017" stroke="#a07010" stroke-width=".6"/>
       <polygon points="10,29.5 10.8,31.5 13,31.5 11.3,32.8 11.9,35 10,33.7 8.1,35 8.7,32.8 7,31.5 9.2,31.5" fill="#c0392b" opacity=".85" transform="scale(0.55) translate(12,24)"/>
-      <!-- Orden 2 (Rot) -->
+      <!-- Orden Rot -->
       <circle cx="16" cy="33.5" r="2.4" fill="#c0392b" stroke="#8b0000" stroke-width=".5"/>
       <circle cx="16" cy="33.5" r="1.2" fill="#e74c3c" opacity=".7"/>
-      <!-- Orden 3 (Silber) -->
+      <!-- Orden Silber -->
       <circle cx="22" cy="32" r="2.2" fill="#aaaaaa" stroke="#777" stroke-width=".5"/>
       <polygon points="22,29.8 22.6,31.4 24.4,31.4 23,32.4 23.5,34.2 22,33.2 20.5,34.2 21,32.4 19.6,31.4 21.4,31.4" fill="#888" opacity=".8" transform="scale(0.5) translate(22,25.5)"/>
-      <!-- Schulterstücke (Epauletten) -->
-      <rect x="4"  y="27" width="6" height="2.5" rx=".6" fill="#d4a017" opacity=".8"/>
+      <!-- Epauletten -->
+      <rect x="4" y="27" width="6" height="2.5" rx=".6" fill="#d4a017" opacity=".8"/>
       <rect x="22" y="27" width="6" height="2.5" rx=".6" fill="#d4a017" opacity=".8"/>
+      <!-- Pelzmütze (Ushanka-Krempe + Kopfteil) -->
+      <g transform="matrix(0.20362,0,0,0.20362,-46.9485,99.0553)">
+        <path style="fill:#1a2510;fill-rule:evenodd;" d="m 309.607,-478.138 -28.988,13.681 -27.927,13.46 -0.839,-0.001 0.29,0.265 -0.29,0.14 h 0.443 l 15.648,14.303 h 82.924 l 15.149,-14.303 h 0.429 l -0.281,-0.14 0.281,-0.265 -0.812,0.001 -27.039,-13.46 z"/>
+        <path style="fill:#4a5540;stroke:#1a2510;stroke-width:5.225;" d="m 271.179,-434.605 a 38.791,12.581 0 0 0 38.103,10.347 38.791,12.581 0 0 0 38.103,-10.347 z"/>
+        <!-- Roter Stern -->
+        <path style="fill:#db4637;stroke:#d4a017;stroke-width:5.292;fill-opacity:1;stroke-opacity:1" d="m 109.264,-179.087 -7.206,13.844 -6.982,-13.958 -15.393,-2.576 11.117,-10.953 -2.307,-15.435 13.853,7.188 13.967,-6.964 -2.556,15.396 10.939,11.131 z" transform="matrix(0.33715,0.26028,-0.24517,0.35794,228.33,-415.317)"/>
+      </g>
     </svg>`;
   }
 
