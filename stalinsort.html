@@ -60,9 +60,11 @@
   @keyframes flash-red   { 0%{background:rgba(180,0,0,.5);opacity:1;}  100%{background:rgba(180,0,0,0);opacity:0;} }
 
   /* ── OVERLAYS ── */
-  .overlay { position:fixed; inset:0; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; background:rgba(6,0,0,.94); backdrop-filter:blur(6px); overflow-y:auto; padding:clamp(8px,2vh,20px) clamp(10px,3vw,20px); }
-  /* Wrapper zentriert Inhalt wenn er reinpasst, ermöglicht Scrollen wenn nicht */
-  .overlay-inner { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; min-height:100%; }
+  /* position:fixed + overflow-y:auto allein reicht nicht zum Scrollen bis ganz oben —
+     der Container braucht kein justify-content:center mehr, der Inner-Wrapper übernimmt das */
+  .overlay { position:fixed; inset:0; z-index:100; display:block; overflow-y:auto; background:rgba(6,0,0,.94); backdrop-filter:blur(6px); }
+  /* Wrapper: zentriert wenn Inhalt kleiner als Fenster, scrollt vollständig wenn größer */
+  .overlay-inner { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100%; padding:clamp(8px,2vh,20px) clamp(10px,3vw,20px); box-sizing:border-box; }
   .overlay.hidden { display:none; }
   .overlay-title { font-family:'Oswald',sans-serif; font-size:clamp(28px,6vw,54px); color:var(--gold); letter-spacing:clamp(3px,1vw,6px); text-align:center; text-shadow:0 0 40px #d4a01755; margin-bottom:4px; }
   .overlay-stats { display:flex; flex-wrap:wrap; justify-content:center; gap:clamp(8px,1.5vw,22px); margin-top:clamp(6px,1.2vh,12px); margin-bottom:clamp(8px,1.5vh,18px); }
@@ -84,7 +86,7 @@
   body.shake { animation:shake .18s ease; }
 
   /*-- Overlay Fließtext --*/
-  .overlay-sub { font-family:'Oswald'; font-size:clamp(9px,1.8vw,11px); color:var(--red); letter-spacing:clamp(1px,0.3vw,2px); opacity:.9; text-align:center; max-width:520px; width:100%; margin:0 auto; }
+  .overlay-sub { font-family:'Oswald'; font-size:clamp(9px,1.8vw,13px); color:var(--red); letter-spacing:clamp(1px,0.3vw,2px); opacity:.9; text-align:center; max-width:520px; width:100%; margin:0 auto; }
 
   /* ── LANDSCAPE MOBILE (max-height statt max-width) ── */
   @media (max-height: 500px) {
@@ -427,6 +429,40 @@
     else { setTimeout(()=>{ flyingEl.style.transition=''; flyingEl.style.transform=''; spawnNumber(); },430); }
   }
 
+  function flashCenterNumber(n) {
+    // Zahl kurz in der Mitte aufleuchten lassen — nicht schießbar
+    const sceneW=scene.offsetWidth, sceneH=scene.offsetHeight;
+    flyingEl.textContent=n;
+    flyingEl.style.transition='none';
+    flyingEl.style.transform='scale(0.6)';
+    flyingEl.style.opacity='0';
+    // mittig positionieren
+    const fw=flyingEl.offsetWidth||100, fh=flyingEl.offsetHeight||80;
+    posX=(sceneW-fw)/2; posY=(sceneH-fh)/2;
+    flyingEl.style.left=posX+'px'; flyingEl.style.top=posY+'px';
+    valRound.textContent=`1/${NUMBERS_PER_ROUND}`;
+    // Einblenden
+    requestAnimationFrame(()=>{
+      flyingEl.style.transition='opacity 0.18s ease-out, transform 0.18s ease-out';
+      flyingEl.style.opacity='1';
+	  flyingEl.style.color='gray';
+      flyingEl.style.transform='scale(3.0)';
+      setTimeout(()=>{
+        flyingEl.style.transition='opacity 0.32s ease-in, transform 0.32s ease-in';
+        flyingEl.style.opacity='0';
+        flyingEl.style.transform='scale(0.7)';
+        setTimeout(()=>{
+          flyingEl.style.transition='';
+          roundCount++;   // Zahl gilt als "gesehen" (maxSoFar wird unten gesetzt)
+          if(maxSoFar===null || n>maxSoFar) maxSoFar=n;
+          // jetzt normale nächste Zahl spawnen
+		  flyingEl.style.color='white';
+          if(gameRunning) spawnNumber();
+        }, 340);
+      }, 700);
+    });
+  }
+
   function spawnNumber() {
     if (!gameRunning) return;
     transitioning=false; shotFired=false;
@@ -438,6 +474,10 @@
       else { n=randInt(maxSoFar+1,maxSoFar+20); if(n>99) n=randInt(1,Math.max(1,maxSoFar)); }
     }
     n=Math.max(1,Math.min(99,n)); currentNumber=n;
+
+    // Erste Zahl eines Durchgangs: nur aufleuchten, nicht fliegen
+    if (roundCount===0) { flashCenterNumber(n); return; }
+
     flyingEl.textContent=n; flyingEl.style.opacity='1'; flyingEl.style.transform=''; flyingEl.style.transition='';
     const sceneW=scene.offsetWidth, sceneH=scene.offsetHeight;
     const fromLeft=Math.random()<0.5;
