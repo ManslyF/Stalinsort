@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STALINSORT</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Special+Elite&display=swap');
+  :root { --red:#c0392b; --dark-red:#7b241c; --gold:#d4a017; --cream:#f5f0e8; --dark:#111; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#111; font-family:'Oswald',sans-serif; overflow:hidden; height:100vh; width:100vw; display:flex; flex-direction:column; align-items:center; }
+  #grain { position:fixed; inset:0; pointer-events:none; z-index:200; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E"); opacity:0.45; }
+
+  /* ── HUD ── */
+  #hud { position:relative; z-index:50; width:100%; flex-shrink:0; display:flex; justify-content:center; align-items:center; gap:28px; padding:9px 16px 7px; background:linear-gradient(180deg,#0a0000,rgba(10,0,0,0.75)); border-bottom:1px solid #c0392b44; }
+  .hud-block { display:flex; flex-direction:column; align-items:center; }
+  .hud-label { font-family:'Special Elite',cursive; font-size:8px; letter-spacing:3px; color:var(--gold); opacity:0.65; }
+  .hud-value { font-size:28px; font-weight:700; line-height:1; letter-spacing:1px; }
+  #score-correct .hud-value { color:#4eca72; }
+  #score-wrong   .hud-value { color:var(--red); }
+  #hud-round     .hud-value { color:var(--cream); font-size:18px; padding-top:3px; }
+  .hud-div { width:1px; height:38px; background:linear-gradient(180deg,transparent,var(--gold),transparent); opacity:0.2; }
+  #title-bar { font-size:10px; letter-spacing:7px; color:var(--gold); font-family:'Special Elite',cursive; opacity:0.45; }
+
+  /* ── FÜRSPRECHER (Politbüro-Mann) ── */
+  #fuersp-block { display:flex; flex-direction:column; align-items:center; gap:3px; }
+  #fuersp-label { font-family:'Special Elite',cursive; font-size:8px; letter-spacing:2px; color:var(--gold); opacity:0.65; white-space:nowrap; }
+  #fuersp-row { display:flex; gap:6px; }
+  .fuersp { width:32px; height:40px; transition:filter .4s,opacity .4s,transform .3s; }
+  .fuersp.lost { filter:grayscale(1) brightness(0.2); opacity:0.25; transform:scale(0.82); }
+  @keyframes fuersp-lose { 0%{transform:scale(1);filter:none;} 15%{transform:scale(1.3) rotate(12deg);filter:brightness(2.5) sepia(1);} 100%{transform:scale(0.82);filter:grayscale(1) brightness(0.2);} }
+  .fuersp.losing { animation:fuersp-lose .55s ease forwards; }
+  @keyframes fuersp-pop  { 0%{transform:scale(1);} 30%{transform:scale(1.3) rotate(-6deg);} 100%{transform:scale(1);} }
+  .fuersp.gained { animation:fuersp-pop .45s ease; }
+
+  /* ── SCENE ── */
+  #scene { position:relative; flex:1; width:100%; overflow:hidden; background: radial-gradient(ellipse 90% 70% at 50% 25%, #1a0808 0%, #0e0e0e 55%, #080808 100%); }
+  #scene::after { content:''; position:absolute; inset:0; pointer-events:none; z-index:15; background:radial-gradient(ellipse 85% 85% at 50% 45%, transparent 35%, rgba(0,0,0,0.82) 100%); }
+  #env { position:absolute; inset:0; z-index:1; pointer-events:none; background: repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,255,255,0.013) 60px), repeating-linear-gradient(90deg,transparent,transparent 79px,rgba(255,255,255,0.013) 80px); }
+  #flying-number { position:absolute; z-index:20; font-size:100px; font-weight:700; color:var(--cream); font-family:'Oswald',sans-serif; text-shadow:0 0 50px rgba(255,230,180,.2),3px 3px 0 rgba(0,0,0,.95); user-select:none; white-space:nowrap; pointer-events:none; letter-spacing:-2px; }
+
+  /* ── GUN ── */
+  #gun-wrap { position:absolute; bottom:0; left:50%; transform:translateX(-50%); z-index:30; pointer-events:none; display:flex; flex-direction:column; align-items:center; }
+  #gun-img { display:block; image-rendering:pixelated; }
+  #muzzle-flash { position:absolute; z-index:35; pointer-events:none; border-radius:50%; background:radial-gradient(circle,#fff8d0 0%,#ffcc00 30%,#ff6600 60%,transparent 90%); opacity:0; transform:translate(-50%,-50%); box-shadow:0 0 60px 20px #ff660088; width:0; height:0; }
+  #muzzle-flash.active { animation:mflash .13s ease-out forwards; }
+  @keyframes mflash { 0%{opacity:1;width:20px;height:20px;} 40%{opacity:1;} 100%{opacity:0;width:80px;height:80px;} }
+
+  /* ── BLUTLACHE bei Treffern ── */
+  .blood-splat { position:absolute; pointer-events:none; z-index:38; animation:splat-anim .5s ease-out forwards; }
+  @keyframes splat-anim { 0%{opacity:1;transform:scale(0.15);} 30%{opacity:.9;transform:scale(1.2);} 100%{opacity:0;transform:scale(2.6);} }
+
+  /* ── BILDSCHIRM-FLASH (grün oder rot) ── */
+  #screen-flash { position:fixed; inset:0; z-index:80; pointer-events:none; opacity:0; }
+  #screen-flash.flash-correct { animation:flash-green 1.35s ease-out forwards; }
+  #screen-flash.flash-wrong   { animation:flash-red   1.38s ease-out forwards; }
+  @keyframes flash-green { 0%{background:rgba(40,180,80,.45);opacity:1;} 100%{background:rgba(40,180,80,0);opacity:0;} }
+  @keyframes flash-red   { 0%{background:rgba(180,0,0,.5);opacity:1;}  100%{background:rgba(180,0,0,0);opacity:0;} }
+
+  /* ── OVERLAYS ── */
+  .overlay { position:fixed; inset:0; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(6,0,0,.94); backdrop-filter:blur(6px); overflow: auto;}
+  .overlay.hidden { display:none; }
+  .overlay-title { font-family:'Oswald',sans-serif; font-size:54px; color:var(--gold); letter-spacing:6px; text-align:center; text-shadow:0 0 40px #d4a01755; margin-bottom:8px; }
+  .overlay-stats { display:flex; gap:22px;margin-top:12px; margin-bottom:18px; }
+  .stat-box { display:flex; flex-direction:column; align-items:center; border:1px solid #ffffff1a; padding:10px 20px; }
+  .stat-box .label { font-size:9px; letter-spacing:3px; color:var(--gold); font-family:'Special Elite',cursive; margin-bottom:3px; }
+  .stat-box .value { font-size:38px; font-weight:700; }
+  .stat-box.good .value { color:#4eca72; }
+  .stat-box.bad  .value { color:var(--red); }
+  .stat-box.info .value { color:var(--gold); }
+  #go-speed-info { font-family:'Special Elite',cursive; font-size:11px; letter-spacing:3px; color:var(--gold); opacity:.45; margin-bottom:20px; text-align:center; }
+  #go-fuersp { display:flex; gap:10px; margin-bottom:20px; }
+  #go-fuersp .fuersp-big { width:46px; height:58px; }
+  #go-fuersp .fuersp-big.lost { filter:grayscale(1) brightness(0.2); opacity:.25; }
+  .btn-restart { background:var(--red); border:none; color:var(--cream); font-family:'Oswald',sans-serif; font-size:17px; letter-spacing:6px; padding:12px 42px; cursor:pointer; text-transform:uppercase; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%); transition:background .2s,transform .1s; }
+  .btn-restart:hover { background:var(--dark-red); transform:scale(1.04); }
+  .overlay-hint { font-family:'Special Elite',cursive; font-size:11px; letter-spacing:3px; color:var(--gold); opacity:0.35; margin-top:12px; }
+  #hint-fixed { position:fixed; bottom:12px; left:50%; transform:translateX(-50%); font-family:'Special Elite',cursive; font-size:11px; letter-spacing:3px; color:var(--gold); opacity:0.22; white-space:nowrap; z-index:60; pointer-events:none; }
+  @keyframes shake { 0%{transform:translate(0,0);} 20%{transform:translate(-6px,3px);} 40%{transform:translate(6px,-3px);} 60%{transform:translate(-4px,4px);} 80%{transform:translate(4px,-2px);} 100%{transform:translate(0,0);} }
+  body.shake { animation:shake .18s ease; }
+  
+  /*--Man Textbox --*/
+  .overlay-sub {
+  font-family:'Oswald';
+  font-size:11px; 
+  color:var(--red); 
+  letter-spacing:2px; 
+  opacity:.9; 
+  text-align:center; 
+  margin-bottom:26px; 
+  max-width:520px;    /* max. 50 % der Viewport‑Breite */
+  width: 100%;        /* innerhalb dieser 50 % flexibel nutzen */
+  margin: 0 auto;     /* zentriert den Container */
+}
+  
+  
+</style>
+</head>
+<body>
+<div id="grain"></div>
+<div id="screen-flash"></div>
+
+<!-- START -->
+<div class="overlay" id="start-overlay">
+  <div class="overlay-title">STALINSORT</div>
+  <div class="overlay-sub">Genosse Stalin hat dir eine sehr wichtige Aufgabe übertragen: Du mußt Zahlen in der richtigen Reihenfolge sortieren! Um die Sache nicht zu kompliziert zu machen - denn komplizierte Sachen mag Genosse Stalin nicht - sollt du diejenigen Zahlen, die aus der Reihe tanzen, einfach eliminieren. Denn ein paar Zahlen mehr oder weniger, wen kümmert das schon! Es gibt ja genügend davon. Mach deine Aufgabe gut, ansonsten könnte Stalin mutmaßen dass du ein ausländischer Agent bist und dann werden dich deine Fürsprecher im Politbüro fallen lassen und Stalin wird wiederum dich eliminieren... Aber halt, da habe ich jetzt etwas durcheinandergebracht. Das mit den ausländischen Agenten war ein anderer großartiger Staatsmann, an dessen Namen ich mich leider gerade nicht erinnere. Wie auch immer:</div>
+  
+ <!--  <div style="font-family:'Special Elite',cursive;color:var(--cream);text-align:center;max-width:420px;line-height:2;font-size:14px;opacity:0.9;letter-spacing:18px ;margin-top:28px; margin-bottom:4px;">
+  <b>HILFE</b>
+  </div> -->
+
+  <div style="font-family:'Special Elite',cursive;color:var(--cream);text-align:center;max-width:520px;line-height:1.2;font-size:13px;opacity:0.7;margin-top:36px; margin-bottom:36px;">
+    Zahlen fliegen durch das Bild, die du nach ihrer Größe aufsteigend sortieren mußt.<br>
+    Ist eine Zahl <span style="color:var(--red)"><b>nicht größer als alle bisher erschienenen Zahlen</b></span>,<br>muss sie eliminiert werden.<br>
+    Du hast <span style="color:var(--gold)">3 Fürsprecher im Politbüro</span>.<br>
+    Nach jedem Fehler verlierst du einen. <span style="color:var(--red)"><b>Bei 0 Fürsprechern ist es für dich vorbei!</b></span><br><br>
+    <span style="color:var(--gold);letter-spacing:3px;">Zum Schießen LEERTASTE drücken.</span>
+  </div>
+  <button class="btn-restart" onclick="startGame()">Spiel starten</button>
+  <div class="overlay-hint">oder LEERTASTE drücken</div>
+</div>
+
+<!-- ROUND / GAME OVER -->
+<div class="overlay hidden" id="gameover-overlay">
+  <div class="overlay-title" id="go-title">RUNDE VORBEI</div>
+  <div class="overlay-sub" id="go-sub">— Ergebnis —</div>
+  <div class="overlay-stats">
+    <div class="stat-box info"><div class="label">LEVEL</div>  <div class="value" id="go-level" style="color:#b0b0b0;">1</div></div>
+    <div class="stat-box good"><div class="label">TREFFER</div><div class="value" id="go-correct">0</div></div>
+    <div class="stat-box bad" ><div class="label">FEHLER</div> <div class="value" id="go-wrong">0</div></div>
+    <div class="stat-box info" id="go-medal-box" style="display:none"><div class="label">MEDAILLEN</div><div class="value" id="go-medals">0</div></div>
+  </div>
+  <div id="go-medal-award" style="display:none; font-family:'Special Elite',cursive; font-size:18px; color:var(--gold); letter-spacing:4px; margin-bottom:12px; text-align:center;"></div>
+  <div id="go-fuersp"></div>
+  <div id="go-speed-info"></div>
+  <button class="btn-restart" id="go-btn" onclick="nextRound()">Nächste Runde ▶</button>
+  <button class="btn-restart" id="go-btn2" style="display:none; margin-top:10px; background:#555;" onclick="startGame()">Neu starten</button>
+  <div class="overlay-hint" id="go-hint">oder LEERTASTE drücken</div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="hud-logo" style="width:48px; height:40px; opacity:0.25; display:flex; align-items:center; justify-content:center; border:1px dashed #ffffff33; flex-shrink:0;"></div>
+  <div class="hud-div"></div>
+  <div class="hud-block" id="hud-level"><div class="hud-label">Level</div><div class="hud-value" id="val-level" style="color:#b0b0b0;">1</div></div>
+  <div class="hud-div"></div>
+  <div id="fuersp-block">
+    <div id="fuersp-label">Fürsprecher</div>
+    <div id="fuersp-row"></div>
+  </div>
+  <div class="hud-div"></div>
+  <div class="hud-block" id="hud-medals"><div class="hud-label">🏅 Medaillen</div><div class="hud-value" id="val-medals" style="color:var(--gold);">0</div></div>
+  <div class="hud-div"></div>
+  <div class="hud-block" id="score-correct"><div class="hud-label">✓ Treffer</div><div class="hud-value" id="val-correct">0</div></div>
+  <div class="hud-div"></div>
+  <div class="hud-block" id="score-wrong"><div class="hud-label">✗ Fehler</div><div class="hud-value" id="val-wrong">0</div></div>
+  <div class="hud-div"></div>
+  <div class="hud-block" id="hud-round"><div class="hud-label">Zahl</div><div class="hud-value" id="val-round">1/?</div></div>
+</div>
+
+<!-- SCENE -->
+<div id="scene">
+  <div id="env"></div>
+  <div id="flying-number">7</div>
+
+  <div id="gun-wrap">
+    <div id="muzzle-flash"></div>
+    <img id="gun-img" alt="gun" src="fistGun.png">
+	
+  </div>
+</div>
+
+<div id="hint-fixed">LEERTASTE — SCHUSS</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//   K O N F I G U R A T I O N S P A R A M E T E R
+// ══════════════════════════════════════════════════
+  const SPEED_X           = 3.5;
+  const SPEED_STEP_Y      = 1.0;
+  const NUMBERS_PER_ROUND = 12;
+  const GUN_HEIGHT_PCT    = 0.20;
+// ══════════════════════════════════════════════════
+
+  const gunImg    = document.getElementById('gun-img');
+  const flashEl   = document.getElementById('muzzle-flash');
+  const screenFlash = document.getElementById('screen-flash');
+
+  function setGunSize() {
+    const h = Math.round(window.innerHeight * GUN_HEIGHT_PCT);
+    gunImg.style.height = h + 'px';
+    gunImg.style.width  = 'auto';
+    flashEl.style.left = '50%';
+    flashEl.style.top  = '0px';
+  }
+  window.addEventListener('resize', setGunSize);
+
+  // DOM
+  const flyingEl    = document.getElementById('flying-number');
+  const scene       = document.getElementById('scene');
+  const valCorrect  = document.getElementById('val-correct');
+  const valWrong    = document.getElementById('val-wrong');
+  const valLevel    = document.getElementById('val-level');
+  const valRound    = document.getElementById('val-round');
+  const fuerspRow   = document.getElementById('fuersp-row');
+  const startOverlay= document.getElementById('start-overlay');
+  const goOverlay   = document.getElementById('gameover-overlay');
+  const goCorrect   = document.getElementById('go-correct');
+  const goWrong     = document.getElementById('go-wrong');
+  const goLevel     = document.getElementById('go-level');
+  const goTitle     = document.getElementById('go-title');
+  const goSub       = document.getElementById('go-sub');
+  const goSpeedInfo = document.getElementById('go-speed-info');
+  const goFuersp    = document.getElementById('go-fuersp');
+  const goBtn       = document.getElementById('go-btn');
+  const goBtn2      = document.getElementById('go-btn2');
+  const goHint      = document.getElementById('go-hint');
+  const goMedalBox  = document.getElementById('go-medal-box');
+  const goMedals    = document.getElementById('go-medals');
+  const goMedalAward= document.getElementById('go-medal-award');
+
+  const  MAX_JOKERS = 3;
+
+  // State
+  let correct=0, wrong=0, maxSoFar=null, currentNumber=null;
+  let animFrame=null, posX=0, posY=0, velX=0, velY=0;
+  let gameRunning=false, shotFired=false, transitioning=false;
+  let roundCount=0, level=1, currentSpeed=SPEED_X;
+  let jokers=MAX_JOKERS, isGameOver=false;
+  let medals=0;  // überlebt Runden, nur bei Neu starten auf 0
+  // Welche Aktion soll Enter auf dem Overlay auslösen?
+  let enterAction = null;
+
+  // ─────────────────────────────────────────────────
+  // FÜRSPRECHER-SVG: Alter sowjetischer Politbüro-Mann
+  // Ohne Mütze — kahler/weißhaariger Kopf + Uniform + Orden
+  // ─────────────────────────────────────────────────
+  function fuerspSVG(w=32, h=40) {
+    return `<svg width="${w}" height="${h}" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+      <!-- Glatze / weißes Haar an Seiten -->
+      <ellipse cx="16" cy="8" rx="8" ry="8" fill="#d4a474"/>
+      <ellipse cx="7"  cy="9"  rx="3" ry="5" fill="#e8e0d0"/>
+      <ellipse cx="25" cy="9"  rx="3" ry="5" fill="#e8e0d0"/>
+      <!-- Gesicht -->
+      <ellipse cx="16" cy="15" rx="7.5" ry="8" fill="#d4a474"/>
+      <!-- Stirnfalten -->
+      <path d="M10 11 Q16 10 22 11" stroke="#b8855a" stroke-width=".7" fill="none"/>
+      <path d="M11 12.5 Q16 11.5 21 12.5" stroke="#b8855a" stroke-width=".5" fill="none"/>
+      <!-- Augen (zusammengekniffen, alt) -->
+      <ellipse cx="13" cy="14" rx="1.8" ry="1.2" fill="#2a1a0a"/>
+      <ellipse cx="19" cy="14" rx="1.8" ry="1.2" fill="#2a1a0a"/>
+      <line x1="11.5" y1="13" x2="14.5" y2="13" stroke="#2a1a0a" stroke-width=".9"/>
+      <line x1="17.5" y1="13" x2="20.5" y2="13" stroke="#2a1a0a" stroke-width=".9"/>
+      <!-- Nase -->
+      <ellipse cx="16" cy="16.5" rx="1.8" ry="2" fill="#c4906a"/>
+      <!-- Schnurrbart (sowjetisch!) -->
+      <path d="M12 19 Q14 18 16 18.5 Q18 18 20 19" stroke="#555" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      <!-- Wangen-Falten -->
+      <path d="M10 16 Q9 18 10 20" stroke="#b8855a" stroke-width=".6" fill="none"/>
+      <path d="M22 16 Q23 18 22 20" stroke="#b8855a" stroke-width=".6" fill="none"/>
+      <!-- Mund (grimmig) -->
+      <path d="M13.5 21 Q16 20 18.5 21" stroke="#a06040" stroke-width=".9" fill="none"/>
+      <!-- Ohren -->
+      <ellipse cx="8.5"  cy="15" rx="1.8" ry="2.5" fill="#c8906a"/>
+      <ellipse cx="23.5" cy="15" rx="1.8" ry="2.5" fill="#c8906a"/>
+      <!-- Hals -->
+      <rect x="13" y="22" width="6" height="3" rx="1" fill="#d4a474"/>
+      <!-- Uniformmantel (dunkelgrün/grau) -->
+      <path d="M4 40 L4 28 Q8 24 16 24 Q24 24 28 28 L28 40 Z" fill="#2a3520"/>
+      <!-- Uniformkragen -->
+      <path d="M13 24 L16 29 L19 24" stroke="#4a5540" stroke-width=".8" fill="#1a2510"/>
+      <!-- Orden 1 (Gold) -->
+      <circle cx="10" cy="32" r="2.8" fill="#d4a017" stroke="#a07010" stroke-width=".6"/>
+      <polygon points="10,29.5 10.8,31.5 13,31.5 11.3,32.8 11.9,35 10,33.7 8.1,35 8.7,32.8 7,31.5 9.2,31.5" fill="#c0392b" opacity=".85" transform="scale(0.55) translate(12,24)"/>
+      <!-- Orden 2 (Rot) -->
+      <circle cx="16" cy="33.5" r="2.4" fill="#c0392b" stroke="#8b0000" stroke-width=".5"/>
+      <circle cx="16" cy="33.5" r="1.2" fill="#e74c3c" opacity=".7"/>
+      <!-- Orden 3 (Silber) -->
+      <circle cx="22" cy="32" r="2.2" fill="#aaaaaa" stroke="#777" stroke-width=".5"/>
+      <polygon points="22,29.8 22.6,31.4 24.4,31.4 23,32.4 23.5,34.2 22,33.2 20.5,34.2 21,32.4 19.6,31.4 21.4,31.4" fill="#888" opacity=".8" transform="scale(0.5) translate(22,25.5)"/>
+      <!-- Schulterstücke (Epauletten) -->
+      <rect x="4"  y="27" width="6" height="2.5" rx=".6" fill="#d4a017" opacity=".8"/>
+      <rect x="22" y="27" width="6" height="2.5" rx=".6" fill="#d4a017" opacity=".8"/>
+    </svg>`;
+  }
+
+  function buildFuersp() {
+    fuerspRow.innerHTML='';
+    for(let i=0;i<MAX_JOKERS;i++){
+      const d=document.createElement('div');
+      d.className='fuersp'+(i>=jokers?' lost':''); d.id=`fuersp-${i}`;
+      d.innerHTML=fuerspSVG(32,40); fuerspRow.appendChild(d);
+    }
+  }
+  function renderFuersp() {
+    for(let i=0;i<MAX_JOKERS;i++){
+      const el=document.getElementById(`fuersp-${i}`);
+      if(!el) continue;
+      if(i<jokers){ el.classList.remove('lost','losing'); }
+      else if(!el.classList.contains('lost')){
+        el.classList.add('losing');
+        setTimeout(()=>{ el.classList.remove('losing'); el.classList.add('lost'); },550);
+      }
+    }
+  }
+
+  function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+  // ── Mündungsfeuer ──
+  function triggerFlash() {
+    flashEl.classList.remove('active');
+    void flashEl.offsetWidth;
+    flashEl.classList.add('active');
+  }
+
+  // ── Bildschirmblitz ──
+  function triggerScreenFlash(cls) {
+    screenFlash.className='';
+    void screenFlash.offsetWidth;
+    screenFlash.classList.add(cls);
+  }
+
+  // ── Blutlache bei Treffern (Schuss) ──
+  function spawnBlood(x, y, isCorrect) {
+    const sz = 130 + randInt(0,50);
+    const el = document.createElement('div');
+    el.className = 'blood-splat';
+    el.style.width  = sz + 'px';
+    el.style.height = sz + 'px';
+    el.style.left   = (x - sz/2) + 'px';
+    el.style.top    = (y - sz/2) + 'px';
+    // grün für richtige Treffer, rot für falsche
+    const c1 = isCorrect ? '#006600' : '#8b0000';
+    const c2 = isCorrect ? '#009900' : '#a00000';
+    const c3 = isCorrect ? '#004400' : '#900000';
+    const c4 = isCorrect ? '#007700' : '#7a0000';
+    el.innerHTML = `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><g opacity=".85">
+      <circle cx="60" cy="60" r="28" fill="${c1}"/>
+      <ellipse cx="60" cy="30" rx="8" ry="18" fill="${c2}" transform="rotate(-20 60 60)"/>
+      <ellipse cx="85" cy="45" rx="7" ry="15" fill="${c3}" transform="rotate(40 60 60)"/>
+      <ellipse cx="35" cy="45" rx="6" ry="14" fill="${c1}" transform="rotate(-50 60 60)"/>
+      <ellipse cx="75" cy="80" rx="5" ry="12" fill="${c4}" transform="rotate(70 60 60)"/>
+      <circle cx="40" cy="80" r="5" fill="${c2}"/>
+      <circle cx="90" cy="70" r="4" fill="${c3}"/>
+      <circle cx="55" cy="20" r="3" fill="${c1}"/>
+    </g></svg>`;
+    scene.appendChild(el);
+    setTimeout(() => el.remove(), 950);
+  }
+
+  // ── Main loop ──
+  function animate() {
+    if (!gameRunning || transitioning) return;
+    const sceneW = scene.offsetWidth;
+    const sceneH = scene.offsetHeight;
+    posX += velX; posY += velY;
+    if (posY < 5)           { posY=5;           velY= Math.abs(velY); }
+    if (posY > sceneH-110)  { posY=sceneH-110;  velY=-Math.abs(velY); }
+    flyingEl.style.left = posX+'px';
+    flyingEl.style.top  = posY+'px';
+    if (posX > sceneW+160 || posX < -160) {
+      if (!shotFired) {
+        const shouldHaveShot = maxSoFar!==null && currentNumber<=maxSoFar;
+        if (shouldHaveShot) {
+          // Falsch passiert: Orden verlieren + roter Bildschirmblitz
+          wrong++; valWrong.textContent=wrong; jokers=Math.max(0,jokers-1); renderFuersp();
+          triggerScreenFlash('flash-wrong');
+          if (jokers<=0){ roundCount++; setTimeout(triggerGameOver,300); return; }
+        } else {
+          // Richtig passiert: grüner Bildschirmblitz
+          correct++; valCorrect.textContent=correct;
+          if (maxSoFar===null || currentNumber>maxSoFar) maxSoFar=currentNumber;
+          triggerScreenFlash('flash-correct');
+        }
+        roundCount++; advanceOrEnd();
+      }
+      return;
+    }
+    animFrame = requestAnimationFrame(animate);
+  }
+
+  function advanceOrEnd() {
+    if (roundCount>=NUMBERS_PER_ROUND){ setTimeout(endRound,300); }
+    else { valRound.textContent=`${roundCount+1}/${NUMBERS_PER_ROUND}`; setTimeout(spawnNumber,400); }
+  }
+
+  // ── Schuss ──
+  function shoot() {
+    if (!gameRunning||shotFired||transitioning) return;
+    shotFired=true;
+    triggerFlash();
+    const shouldShoot = maxSoFar!==null && currentNumber<=maxSoFar;
+    const nx = posX+(flyingEl.offsetWidth||80)/2;
+    const ny = posY+(flyingEl.offsetHeight||90)/2;
+    if (shouldShoot) {
+      // Richtiger Treffer: grüne Blutlache
+      correct++; valCorrect.textContent=correct;
+      spawnBlood(nx, ny, true);
+    } else {
+      // Falscher Treffer: rote Blutlache + Shake
+      wrong++; valWrong.textContent=wrong; jokers=Math.max(0,jokers-1); renderFuersp();
+      spawnBlood(nx, ny, false);
+      shakeScreen();
+      if (maxSoFar===null||currentNumber>maxSoFar) maxSoFar=currentNumber;
+      if (jokers<=0){ stopGame(); setTimeout(triggerGameOver,450); return; }
+    }
+    transitioning=true; cancelAnimationFrame(animFrame);
+    flyingEl.style.transition='opacity .25s,transform .25s';
+    flyingEl.style.opacity='0'; flyingEl.style.transform='scale(1.5) rotate(15deg)';
+    roundCount++;
+    if (roundCount>=NUMBERS_PER_ROUND){ setTimeout(endRound,430); }
+    else { setTimeout(()=>{ flyingEl.style.transition=''; flyingEl.style.transform=''; spawnNumber(); },430); }
+  }
+
+  function spawnNumber() {
+    if (!gameRunning) return;
+    transitioning=false; shotFired=false;
+    let n;
+    const forceShoot=maxSoFar!==null&&Math.random()<0.42;
+    if (forceShoot){ n=randInt(Math.max(1,maxSoFar-15),maxSoFar); }
+    else {
+      if (maxSoFar===null){ n=randInt(10,60); }
+      else { n=randInt(maxSoFar+1,maxSoFar+20); if(n>99) n=randInt(1,Math.max(1,maxSoFar)); }
+    }
+    n=Math.max(1,Math.min(99,n)); currentNumber=n;
+    flyingEl.textContent=n; flyingEl.style.opacity='1'; flyingEl.style.transform=''; flyingEl.style.transition='';
+    const sceneW=scene.offsetWidth, sceneH=scene.offsetHeight;
+    const fromLeft=Math.random()<0.5;
+    posY=randInt(sceneH*0.07,sceneH*0.52);
+    if(fromLeft){ posX=-130; velX=currentSpeed; } else { posX=sceneW+10; velX=-currentSpeed; }
+    velY=(Math.random()-0.5)*1.2;
+    flyingEl.style.left=posX+'px'; flyingEl.style.top=posY+'px';
+    valRound.textContent=`${roundCount+1}/${NUMBERS_PER_ROUND}`;
+    animate();
+  }
+
+  function shakeScreen() {
+    document.body.classList.remove('shake'); void document.body.offsetWidth;
+    document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),200);
+  }
+  function stopGame() { gameRunning=false; cancelAnimationFrame(animFrame); flyingEl.style.opacity='0'; }
+
+  function triggerGameOver() {
+    stopGame(); isGameOver=true;
+    goTitle.textContent='GAME OVER'; goSub.textContent='— Es ist für dich VORBEI —';
+    goCorrect.textContent=correct; goWrong.textContent=wrong; goLevel.textContent=level;
+    goSpeedInfo.textContent='';
+    goMedalAward.style.display='none';
+    // Medaillen anzeigen
+    goMedalBox.style.display='flex';
+    goMedals.textContent=medals;
+    goFuersp.innerHTML='';
+    for(let i=0;i<MAX_JOKERS;i++){ const d=document.createElement('div'); d.className='fuersp-big'+(i>=jokers?' lost':''); d.innerHTML=fuerspSVG(46,58); goFuersp.appendChild(d); }
+    if (medals>0) {
+      // Retry möglich
+      goBtn.textContent=`Level wiederholen (🏅 -1 Medaille)`;
+      goBtn.style.background='var(--dark-red)';
+      goBtn.onclick=retryRound;
+      goBtn2.style.display='inline-block';
+      goBtn2.textContent='Neu starten';
+      goBtn2.onclick=startGame;
+      enterAction = retryRound;
+      goHint.textContent='LEERTASTE: Level wiederholen · oder Neu starten';
+    } else {
+      // Kein Retry
+      goBtn.textContent='Neu starten';
+      goBtn.style.background='var(--red)';
+      goBtn.onclick=startGame;
+      goBtn2.style.display='none';
+      enterAction = startGame;
+      goHint.textContent='oder LEERTASTE drücken';
+    }
+    goOverlay.classList.remove('hidden');
+  }
+
+  function endRound() {
+    stopGame(); isGameOver=false;
+    const acc=jokers;
+    const perfect=(wrong===0);
+    if(perfect){ medals++; }
+    goCorrect.textContent=correct; goWrong.textContent=wrong; goLevel.textContent=level;
+    // Medaillenanzeige
+    goMedalBox.style.display='flex';
+    goMedals.textContent=medals;
+    if(perfect){
+      goMedalAward.style.display='block';
+      goMedalAward.textContent='🏅 Medaille verdient! Gesamt: '+medals;
+    } else {
+      goMedalAward.style.display='none';
+    }
+    if(acc==3){ goTitle.textContent='GENOSSE BEWÄHRT'; goSub.textContent='— Der Staat ist stolz auf Sie —'; }
+    else if(acc==2){ goTitle.textContent='AKZEPTABEL'; goSub.textContent='— Es bleibt Raum für Verbesserung —'; }
+    else { goTitle.textContent='UNZUVERLÄSSIG'; goSub.textContent='— Bericht wird eingereicht —'; }
+    goFuersp.innerHTML='';
+    for(let i=0;i<MAX_JOKERS;i++){ const d=document.createElement('div'); d.className='fuersp-big'+(i>=jokers?' lost':''); d.innerHTML=fuerspSVG(46,58); goFuersp.appendChild(d); }
+    goSpeedInfo.textContent=`Geschwindigkeit ${currentSpeed.toFixed(1)} → Level ${level+1}: ${(currentSpeed+SPEED_STEP_Y).toFixed(1)}`;
+    goBtn.textContent='Nächste Runde ▶';
+    goBtn.style.background='var(--red)';
+    goBtn.onclick=nextRound;
+    goBtn2.style.display='none';
+    enterAction = nextRound;
+    goHint.textContent='oder LEERTASTE drücken';
+    goOverlay.classList.remove('hidden');
+  }
+
+  function retryRound() {
+    // Level wiederholen kostet eine Medaille
+    medals=Math.max(0,medals-1);
+    document.getElementById('val-medals').textContent=medals;
+    resetState(true); goOverlay.classList.add('hidden'); spawnNumber();
+  }
+  function resetState(keepLevel) {
+    if(!keepLevel){ level=1; currentSpeed=SPEED_X; medals=0; }
+    jokers=MAX_JOKERS; correct=0; wrong=0; roundCount=0;
+    maxSoFar=null; currentNumber=null; shotFired=false; transitioning=false;
+    gameRunning=true; isGameOver=false; enterAction=null;
+    valCorrect.textContent='0'; valWrong.textContent='0';
+    valLevel.textContent=level; valRound.textContent=`1/${NUMBERS_PER_ROUND}`;
+    document.getElementById('val-medals').textContent=medals;
+    buildFuersp();
+    flyingEl.style.opacity='1'; flyingEl.style.transform=''; flyingEl.style.transition='';
+    cancelAnimationFrame(animFrame);
+  }
+  function nextRound() {
+    level++; currentSpeed=SPEED_X+(level-1)*SPEED_STEP_Y;
+    jokers=MAX_JOKERS;
+    resetState(true); goOverlay.classList.add('hidden'); spawnNumber();
+  }
+  function startGame() {
+    resetState(false);
+    startOverlay.classList.add('hidden'); goOverlay.classList.add('hidden'); spawnNumber();
+  }
+
+  // Boot
+  enterAction = startGame;
+  buildFuersp();
+  setGunSize();
+
+  // ── Tastatur ──
+  document.addEventListener('keydown', e=>{
+    if (e.code==='Space') {
+      e.preventDefault();
+      if (gameRunning) shoot();
+	  if (enterAction) enterAction();
+    }
+    //if (e.code==='Enter') {
+    //  e.preventDefault();
+    //  if (enterAction) { enterAction(); }
+    //}
+  });
+  document.addEventListener('touchstart', ()=>{ if(gameRunning) shoot(); });
+  scene.addEventListener('click', ()=>{ if(gameRunning) shoot(); });
+</script>
+</body>
+</html>
