@@ -12,21 +12,23 @@
   #grain { position:fixed; inset:0; pointer-events:none; z-index:200; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E"); opacity:0.45; }
 
   /* ── HUD ── */
-  #hud { position:relative; z-index:50; width:100%; flex-shrink:0; display:flex; justify-content:center; align-items:center; gap:28px; padding:9px 16px 7px; background:linear-gradient(180deg,#0a0000,rgba(10,0,0,0.75)); border-bottom:1px solid #c0392b44; }
+  #hud { position:relative; z-index:50; width:100%; flex-shrink:0; display:flex; justify-content:center; align-items:center;
+    gap:clamp(8px,2vw,28px); padding:clamp(4px,1vh,9px) clamp(6px,1.5vw,16px);
+    background:linear-gradient(180deg,#0a0000,rgba(10,0,0,0.75)); border-bottom:1px solid #c0392b44; }
   .hud-block { display:flex; flex-direction:column; align-items:center; }
-  .hud-label { font-family:'Special Elite',cursive; font-size:8px; letter-spacing:3px; color:var(--gold); opacity:0.65; }
-  .hud-value { font-size:28px; font-weight:700; line-height:1; letter-spacing:1px; }
+  .hud-label { font-family:'Special Elite',cursive; font-size:clamp(6px,1.2vw,8px); letter-spacing:clamp(1px,0.4vw,3px); color:var(--gold); opacity:0.65; }
+  .hud-value { font-size:clamp(16px,3.5vw,28px); font-weight:700; line-height:1; letter-spacing:1px; }
   #score-correct .hud-value { color:#4eca72; }
   #score-wrong   .hud-value { color:var(--red); }
-  #hud-round     .hud-value { color:var(--cream); font-size:18px; padding-top:3px; }
-  .hud-div { width:1px; height:38px; background:linear-gradient(180deg,transparent,var(--gold),transparent); opacity:0.2; }
-  #title-bar { font-size:10px; letter-spacing:7px; color:var(--gold); font-family:'Special Elite',cursive; opacity:0.45; }
+  #hud-round     .hud-value { color:var(--cream); font-size:clamp(12px,2.5vw,18px); padding-top:2px; }
+  .hud-div { width:1px; height:clamp(24px,4vh,38px); background:linear-gradient(180deg,transparent,var(--gold),transparent); opacity:0.2; }
+  #title-bar { font-size:clamp(7px,1.2vw,10px); letter-spacing:clamp(3px,0.8vw,7px); color:var(--gold); font-family:'Special Elite',cursive; opacity:0.45; }
 
   /* ── FÜRSPRECHER (Politbüro-Mann) ── */
-  #fuersp-block { display:flex; flex-direction:column; align-items:center; gap:3px; }
-  #fuersp-label { font-family:'Special Elite',cursive; font-size:8px; letter-spacing:2px; color:var(--gold); opacity:0.65; white-space:nowrap; }
-  #fuersp-row { display:flex; gap:6px; }
-  .fuersp { width:32px; height:40px; transition:filter .4s,opacity .4s,transform .3s; }
+  #fuersp-block { display:flex; flex-direction:column; align-items:center; gap:2px; }
+  #fuersp-label { font-family:'Special Elite',cursive; font-size:clamp(6px,1.2vw,8px); letter-spacing:clamp(1px,0.3vw,2px); color:var(--gold); opacity:0.65; white-space:nowrap; }
+  #fuersp-row { display:flex; gap:clamp(3px,0.6vw,6px); }
+  .fuersp { width:clamp(20px,3.5vw,32px); height:clamp(25px,4.4vw,40px); transition:filter .4s,opacity .4s,transform .3s; }
   .fuersp.lost { filter:grayscale(1) brightness(0.2); opacity:0.25; transform:scale(0.82); }
   @keyframes fuersp-lose { 0%{transform:scale(1);filter:none;} 15%{transform:scale(1.3) rotate(12deg);filter:brightness(2.5) sepia(1);} 100%{transform:scale(0.82);filter:grayscale(1) brightness(0.2);} }
   .fuersp.losing { animation:fuersp-lose .55s ease forwards; }
@@ -37,7 +39,7 @@
   #scene { position:relative; flex:1; width:100%; overflow:hidden; background: radial-gradient(ellipse 90% 70% at 50% 25%, #1a0808 0%, #0e0e0e 55%, #080808 100%); }
   #scene::after { content:''; position:absolute; inset:0; pointer-events:none; z-index:15; background:radial-gradient(ellipse 85% 85% at 50% 45%, transparent 35%, rgba(0,0,0,0.82) 100%); }
   #env { position:absolute; inset:0; z-index:1; pointer-events:none; background: repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,255,255,0.013) 60px), repeating-linear-gradient(90deg,transparent,transparent 79px,rgba(255,255,255,0.013) 80px); }
-  #flying-number { position:absolute; z-index:20; font-size:100px; font-weight:700; color:var(--cream); font-family:'Oswald',sans-serif; text-shadow:0 0 50px rgba(255,230,180,.2),3px 3px 0 rgba(0,0,0,.95); user-select:none; white-space:nowrap; pointer-events:none; letter-spacing:-2px; }
+  #flying-number { position:absolute; z-index:20; font-size:clamp(48px,12vw,100px); font-weight:700; color:var(--cream); font-family:'Oswald',sans-serif; text-shadow:0 0 50px rgba(255,230,180,.2),3px 3px 0 rgba(0,0,0,.95); user-select:none; white-space:nowrap; pointer-events:none; letter-spacing:-2px; }
 
   /* ── GUN ── */
   #gun-wrap { position:absolute; bottom:0; left:50%; transform:translateX(-50%); z-index:30; pointer-events:none; display:flex; flex-direction:column; align-items:center; }
@@ -50,7 +52,7 @@
   .blood-splat { position:absolute; pointer-events:none; z-index:38; animation:splat-anim .5s ease-out forwards; }
   @keyframes splat-anim { 0%{opacity:1;transform:scale(0.15);} 30%{opacity:.9;transform:scale(1.2);} 100%{opacity:0;transform:scale(2.6);} }
 
-  /* ── BILDSCHIRM-FLASH (grün oder rot) ── */
+  /* ── BILDSCHIRM-FLASH ── */
   #screen-flash { position:fixed; inset:0; z-index:80; pointer-events:none; opacity:0; }
   #screen-flash.flash-correct { animation:flash-green 1.35s ease-out forwards; }
   #screen-flash.flash-wrong   { animation:flash-red   1.38s ease-out forwards; }
@@ -58,42 +60,50 @@
   @keyframes flash-red   { 0%{background:rgba(180,0,0,.5);opacity:1;}  100%{background:rgba(180,0,0,0);opacity:0;} }
 
   /* ── OVERLAYS ── */
-  .overlay { position:fixed; inset:0; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(6,0,0,.94); backdrop-filter:blur(6px); overflow: auto;}
+  .overlay { position:fixed; inset:0; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(6,0,0,.94); backdrop-filter:blur(6px); overflow-y:auto; padding:clamp(8px,2vh,20px) clamp(10px,3vw,20px); }
   .overlay.hidden { display:none; }
-  .overlay-title { font-family:'Oswald',sans-serif; font-size:54px; color:var(--gold); letter-spacing:6px; text-align:center; text-shadow:0 0 40px #d4a01755; margin-bottom:8px; }
-  .overlay-stats { display:flex; gap:22px;margin-top:12px; margin-bottom:18px; }
-  .stat-box { display:flex; flex-direction:column; align-items:center; border:1px solid #ffffff1a; padding:10px 20px; }
-  .stat-box .label { font-size:9px; letter-spacing:3px; color:var(--gold); font-family:'Special Elite',cursive; margin-bottom:3px; }
-  .stat-box .value { font-size:38px; font-weight:700; }
+  .overlay-title { font-family:'Oswald',sans-serif; font-size:clamp(28px,6vw,54px); color:var(--gold); letter-spacing:clamp(3px,1vw,6px); text-align:center; text-shadow:0 0 40px #d4a01755; margin-bottom:4px; }
+  .overlay-stats { display:flex; flex-wrap:wrap; justify-content:center; gap:clamp(8px,1.5vw,22px); margin-top:clamp(6px,1.2vh,12px); margin-bottom:clamp(8px,1.5vh,18px); }
+  .stat-box { display:flex; flex-direction:column; align-items:center; border:1px solid #ffffff1a; padding:clamp(5px,1vh,10px) clamp(10px,2vw,20px); }
+  .stat-box .label { font-size:clamp(7px,1.2vw,9px); letter-spacing:clamp(1px,0.4vw,3px); color:var(--gold); font-family:'Special Elite',cursive; margin-bottom:2px; }
+  .stat-box .value { font-size:clamp(22px,4.5vw,38px); font-weight:700; }
   .stat-box.good .value { color:#4eca72; }
   .stat-box.bad  .value { color:var(--red); }
   .stat-box.info .value { color:var(--gold); }
-  #go-speed-info { font-family:'Special Elite',cursive; font-size:11px; letter-spacing:3px; color:var(--gold); opacity:.45; margin-bottom:20px; text-align:center; }
-  #go-fuersp { display:flex; gap:10px; margin-bottom:20px; }
-  #go-fuersp .fuersp-big { width:46px; height:58px; }
+  #go-speed-info { font-family:'Special Elite',cursive; font-size:clamp(9px,1.5vw,11px); letter-spacing:clamp(1px,0.4vw,3px); color:var(--gold); opacity:.45; margin-bottom:clamp(8px,1.5vh,20px); text-align:center; }
+  #go-fuersp { display:flex; gap:clamp(5px,1vw,10px); margin-bottom:clamp(8px,1.5vh,20px); }
+  #go-fuersp .fuersp-big { width:clamp(28px,4.5vw,46px); height:clamp(36px,5.6vw,58px); }
   #go-fuersp .fuersp-big.lost { filter:grayscale(1) brightness(0.2); opacity:.25; }
-  .btn-restart { background:var(--red); border:none; color:var(--cream); font-family:'Oswald',sans-serif; font-size:17px; letter-spacing:6px; padding:12px 42px; cursor:pointer; text-transform:uppercase; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%); transition:background .2s,transform .1s; }
+  .btn-restart { background:var(--red); border:none; color:var(--cream); font-family:'Oswald',sans-serif; font-size:clamp(12px,2vw,17px); letter-spacing:clamp(2px,0.8vw,6px); padding:clamp(8px,1.5vh,12px) clamp(20px,4vw,42px); cursor:pointer; text-transform:uppercase; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%); transition:background .2s,transform .1s; }
   .btn-restart:hover { background:var(--dark-red); transform:scale(1.04); }
-  .overlay-hint { font-family:'Special Elite',cursive; font-size:11px; letter-spacing:3px; color:var(--gold); opacity:0.35; margin-top:12px; }
-  #hint-fixed { position:fixed; bottom:12px; left:50%; transform:translateX(-50%); font-family:'Special Elite',cursive; font-size:11px; letter-spacing:3px; color:var(--gold); opacity:0.22; white-space:nowrap; z-index:60; pointer-events:none; }
+  .overlay-hint { font-family:'Special Elite',cursive; font-size:clamp(9px,1.4vw,11px); letter-spacing:clamp(1px,0.4vw,3px); color:var(--gold); opacity:0.35; margin-top:clamp(6px,1vh,12px); }
+  #hint-fixed { position:fixed; bottom:8px; left:50%; transform:translateX(-50%); font-family:'Special Elite',cursive; font-size:clamp(9px,1.4vw,11px); letter-spacing:2px; color:var(--gold); opacity:0.22; white-space:nowrap; z-index:60; pointer-events:none; }
   @keyframes shake { 0%{transform:translate(0,0);} 20%{transform:translate(-6px,3px);} 40%{transform:translate(6px,-3px);} 60%{transform:translate(-4px,4px);} 80%{transform:translate(4px,-2px);} 100%{transform:translate(0,0);} }
   body.shake { animation:shake .18s ease; }
-  
-  /*--Man Textbox --*/
-  .overlay-sub {
-  font-family:'Oswald';
-  font-size:11px; 
-  color:var(--red); 
-  letter-spacing:2px; 
-  opacity:.9; 
-  text-align:center; 
-  margin-bottom:26px; 
-  max-width:520px;    /* max. 50 % der Viewport‑Breite */
-  width: 100%;        /* innerhalb dieser 50 % flexibel nutzen */
-  margin: 0 auto;     /* zentriert den Container */
-}
-  
-  
+
+  /*-- Overlay Fließtext --*/
+  .overlay-sub { font-family:'Oswald'; font-size:clamp(9px,1.8vw,11px); color:var(--red); letter-spacing:clamp(1px,0.3vw,2px); opacity:.9; text-align:center; max-width:520px; width:100%; margin:0 auto; }
+
+  /* ── LANDSCAPE MOBILE (max-height statt max-width) ── */
+  @media (max-height: 500px) {
+    #hud { gap:clamp(6px,1.5vw,14px); padding:3px clamp(6px,1.5vw,14px); }
+    .hud-value { font-size:clamp(14px,3vw,20px); }
+    .hud-div { height:22px; }
+    .fuersp { width:clamp(16px,2.8vw,24px); height:clamp(20px,3.5vw,30px); }
+    #flying-number { font-size:clamp(38px,10vw,72px); }
+    .overlay-title { font-size:clamp(22px,5vw,36px); margin-bottom:2px; }
+    .overlay-stats { gap:6px; margin-top:4px; margin-bottom:6px; }
+    .stat-box { padding:4px 10px; }
+    .stat-box .value { font-size:clamp(18px,3.5vw,28px); }
+    #go-fuersp { margin-bottom:6px; }
+    #go-fuersp .fuersp-big { width:clamp(22px,3.5vw,34px); height:clamp(28px,4.4vw,43px); }
+    #go-speed-info { margin-bottom:6px; font-size:9px; }
+    .btn-restart { padding:6px 20px; font-size:clamp(11px,1.8vw,14px); letter-spacing:3px; }
+    #go-medal-award { font-size:13px !important; margin-bottom:4px !important; }
+    .overlay-hint { margin-top:4px; }
+    /* Overlay im Landscape: horizontal zwei Spalten wenn genug Breite */
+    #gameover-overlay { justify-content:flex-start; padding-top:8px; }
+  }
 </style>
 </head>
 <body>
@@ -103,18 +113,15 @@
 <!-- START -->
 <div class="overlay" id="start-overlay">
   <div class="overlay-title">STALINSORT</div>
-  <div class="overlay-sub">Genosse Stalin hat dir eine sehr wichtige Aufgabe übertragen: Du mußt Zahlen in der richtigen Reihenfolge sortieren! Um die Sache nicht zu kompliziert zu machen - denn komplizierte Sachen mag Genosse Stalin nicht - sollt du diejenigen Zahlen, die aus der Reihe tanzen, einfach eliminieren. Denn ein paar Zahlen mehr oder weniger, wen kümmert das schon! Es gibt ja genügend davon. Mach deine Aufgabe gut, ansonsten könnte Stalin mutmaßen dass du ein ausländischer Agent bist und dann werden dich deine Fürsprecher im Politbüro fallen lassen und Stalin wird wiederum dich eliminieren... Aber halt, da habe ich jetzt etwas durcheinandergebracht. Das mit den ausländischen Agenten war ein anderer großartiger Staatsmann, an dessen Namen ich mich leider gerade nicht erinnere. Wie auch immer:</div>
+  <div class="overlay-sub">Genosse Stalin hat dir eine sehr wichtige Aufgabe übertragen: Du mußt Zahlen in der richtigen Reihenfolge sortieren! Um die Sache nicht zu kompliziert zu machen - denn komplizierte Sachen mag Genosse Stalin nicht - sollt du diejenigen Zahlen, die aus der Reihe tanzen, einfach eliminieren. Denn ein paar Zahlen mehr oder weniger, wen kümmert das schon! Es gibt ja genügend davon. Mach deine Aufgabe gut, ansonsten könnte Stalin mutmaßen dass du ein ausländischer Agent bist und dann wird er dich beseitigen lassen... Aber halt, da habe ich jetzt etwas durcheinandergebracht. Das mit den ausländischen Agenten war ein anderer großartiger Staatsmann, an dessen Namen ich mich leider gerade nicht erinnere. Wie auch immer:</div>
   
- <!--  <div style="font-family:'Special Elite',cursive;color:var(--cream);text-align:center;max-width:420px;line-height:2;font-size:14px;opacity:0.9;letter-spacing:18px ;margin-top:28px; margin-bottom:4px;">
-  <b>HILFE</b>
-  </div> -->
-
-  <div style="font-family:'Special Elite',cursive;color:var(--cream);text-align:center;max-width:520px;line-height:1.2;font-size:13px;opacity:0.7;margin-top:36px; margin-bottom:36px;">
+  <div style="font-family:'Special Elite',cursive;color:var(--cream);text-align:center;max-width:520px;line-height:1.2;font-size:clamp(10px,2vw,13px);opacity:0.7;margin-top:clamp(10px,2vh,36px); margin-bottom:clamp(10px,2vh,36px);">
     Zahlen fliegen durch das Bild, die du nach ihrer Größe aufsteigend sortieren mußt.<br>
     Ist eine Zahl <span style="color:var(--red)"><b>nicht größer als alle bisher erschienenen Zahlen</b></span>,<br>muss sie eliminiert werden.<br>
-    Du hast <span style="color:var(--gold)">3 Fürsprecher im Politbüro</span>.<br>
-    Nach jedem Fehler verlierst du einen. <span style="color:var(--red)"><b>Bei 0 Fürsprechern ist es für dich vorbei!</b></span><br><br>
-    <span style="color:var(--gold);letter-spacing:3px;">Zum Schießen LEERTASTE drücken.</span>
+    Du hast <span style="color:var(--gold)">3 Fürsprecher im Politbüro</span>. Nach jedem Fehler verlierst du einen.
+    <br><span style="color:var(--red)"><b>Bei 0 Fürsprechern ist es für dich vorbei!</b></span><br>
+    Hast du Medaillen gibt dir Stalin noch eine Chance<br><br>
+    <span style="color:var(--gold);letter-spacing:3px;"><b>Schießen: LEERTASTE oder Bildschirm antippen.</b></span>
   </div>
   <button class="btn-restart" onclick="startGame()">Spiel starten</button>
   <div class="overlay-hint">oder LEERTASTE drücken</div>
@@ -126,7 +133,7 @@
   <div class="overlay-sub" id="go-sub">— Ergebnis —</div>
   <div class="overlay-stats">
     <div class="stat-box info"><div class="label">LEVEL</div>  <div class="value" id="go-level" style="color:#b0b0b0;">1</div></div>
-    <div class="stat-box good"><div class="label">TREFFER</div><div class="value" id="go-correct">0</div></div>
+    <div class="stat-box good"><div class="label">RICHTIG</div><div class="value" id="go-correct">0</div></div>
     <div class="stat-box bad" ><div class="label">FEHLER</div> <div class="value" id="go-wrong">0</div></div>
     <div class="stat-box info" id="go-medal-box" style="display:none"><div class="label">MEDAILLEN</div><div class="value" id="go-medals">0</div></div>
   </div>
@@ -140,8 +147,10 @@
 
 <!-- HUD -->
 <div id="hud">
-  <div id="hud-logo" style="width:48px; height:40px; opacity:0.25; display:flex; align-items:center; justify-content:center; border:1px dashed #ffffff33; flex-shrink:0;"></div>
+  <!--<div id="hud-logo" style="width:48px; height:40px; opacity:0.25; display:flex; align-items:center; justify-content:center; border:1px dashed #ffffff33; flex-shrink:0;"></div>
+ 
   <div class="hud-div"></div>
+   -->
   <div class="hud-block" id="hud-level"><div class="hud-label">Level</div><div class="hud-value" id="val-level" style="color:#b0b0b0;">1</div></div>
   <div class="hud-div"></div>
   <div id="fuersp-block">
@@ -149,11 +158,11 @@
     <div id="fuersp-row"></div>
   </div>
   <div class="hud-div"></div>
-  <div class="hud-block" id="hud-medals"><div class="hud-label">🏅 Medaillen</div><div class="hud-value" id="val-medals" style="color:var(--gold);">0</div></div>
+  <div class="hud-block" id="hud-medals"><div class="hud-label">Medaillen</div><div class="hud-value" id="val-medals" style="color:var(--gold);">0</div></div>
   <div class="hud-div"></div>
-  <div class="hud-block" id="score-correct"><div class="hud-label">✓ Treffer</div><div class="hud-value" id="val-correct">0</div></div>
+  <div class="hud-block" id="score-correct"><div class="hud-label">RICHTIG</div><div class="hud-value" id="val-correct">0</div></div>
   <div class="hud-div"></div>
-  <div class="hud-block" id="score-wrong"><div class="hud-label">✗ Fehler</div><div class="hud-value" id="val-wrong">0</div></div>
+  <div class="hud-block" id="score-wrong"><div class="hud-label">Fehler</div><div class="hud-value" id="val-wrong">0</div></div>
   <div class="hud-div"></div>
   <div class="hud-block" id="hud-round"><div class="hud-label">Zahl</div><div class="hud-value" id="val-round">1/?</div></div>
 </div>
@@ -187,7 +196,9 @@
   const screenFlash = document.getElementById('screen-flash');
 
   function setGunSize() {
-    const h = Math.round(window.innerHeight * GUN_HEIGHT_PCT);
+    // Auf kleinen Landscape-Screens (z.B. Handy quer) weniger Platz für die Waffe
+    const pct = window.innerHeight < 500 ? 0.28 : GUN_HEIGHT_PCT;
+    const h = Math.round(window.innerHeight * pct);
     gunImg.style.height = h + 'px';
     gunImg.style.width  = 'auto';
     flashEl.style.left = '50%';
