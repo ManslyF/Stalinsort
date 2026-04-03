@@ -25,7 +25,7 @@
 }
 
 
-  :root { --red:#c0392b; --dark-red:#7b241c; --gold:#d4a017; --cream:#f5f0e8; --dark:#111; }
+  :root { --red:#c0392b; --dark-red:#7b241c; --gold:#d4a017; --cream:#f5f0e8; --dark:#111; --blue:#4a9edd; }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:#111; font-family:'Oswald',sans-serif; overflow:hidden; height:100vh; width:100vw; display:flex; flex-direction:column; align-items:center; }
   #grain { position:fixed; inset:0; pointer-events:none; z-index:200; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E"); opacity:0.45; }
@@ -38,6 +38,8 @@
   .hud-block { display:flex; flex-direction:column; align-items:center; }
   .hud-label { font-family:'Special Elite',cursive; font-size:clamp(6px,1.2vw,8px); letter-spacing:clamp(1px,0.4vw,3px); color:var(--gold); opacity:0.65; }
   .hud-value { font-size:clamp(16px,3.5vw,28px); font-weight:700; line-height:1; letter-spacing:1px; }
+  #hud-highscore .hud-value { color:var(--blue); }
+  .stat-box.hi   .value { color:var(--blue); }
   #score-correct .hud-value { color:#4eca72; }
   #score-wrong   .hud-value { color:var(--red); }
   #hud-round     .hud-value { color:var(--cream); font-size:clamp(12px,2.5vw,18px); padding-top:2px; }
@@ -157,6 +159,7 @@
   <div class="overlay-title" id="go-title">RUNDE VORBEI</div>
   <div class="overlay-sub" id="go-sub">— Ergebnis —</div>
   <div class="overlay-stats">
+    <div class="stat-box hi" id="go-highscore-box"><div class="label">HIGHSCORE</div><div class="value" id="go-highscore">0</div></div>
     <div class="stat-box info"><div class="label">LEVEL</div>  <div class="value" id="go-level" style="color:#b0b0b0;">1</div></div>
     <div class="stat-box good"><div class="label">RICHTIG</div><div class="value" id="go-correct">0</div></div>
     <div class="stat-box bad" ><div class="label">FEHLER</div> <div class="value" id="go-wrong">0</div></div>
@@ -177,6 +180,8 @@
  
   <div class="hud-div"></div>
    -->
+  <div class="hud-block" id="hud-highscore"><div class="hud-label">Highscore</div><div class="hud-value" id="val-highscore">0</div></div>
+  <div class="hud-div"></div>
   <div class="hud-block" id="hud-level"><div class="hud-label">Level</div><div class="hud-value" id="val-level" style="color:#b0b0b0;">1</div></div>
   <div class="hud-div"></div>
   <div id="fuersp-block">
@@ -255,6 +260,7 @@
   const goMedalBox  = document.getElementById('go-medal-box');
   const goMedals    = document.getElementById('go-medals');
   const goMedalAward= document.getElementById('go-medal-award');
+  const goHighscore = document.getElementById('go-highscore');
 
   const  MAX_JOKERS = 3;
 
@@ -264,7 +270,8 @@
   let gameRunning=false, shotFired=false, transitioning=false;
   let roundCount=0, level=1, currentSpeed=SPEED_X;
   let jokers=MAX_JOKERS, isGameOver=false;
-  let medals=0;  // überlebt Runden, nur bei Neu starten auf 0
+  let medals=0;
+  let highscore=0;  // läuft über alle Runden, reset nur bei startGame()
   // Welche Aktion soll Enter auf dem Overlay auslösen?
   let enterAction = null;
 
@@ -406,6 +413,7 @@
         } else {
           // Richtig passiert: grüner Bildschirmblitz
           correct++; valCorrect.textContent=correct;
+          highscore++; document.getElementById('val-highscore').textContent=highscore;
           if (maxSoFar===null || currentNumber>maxSoFar) maxSoFar=currentNumber;
           triggerScreenFlash('flash-correct');
         }
@@ -432,6 +440,7 @@
     if (shouldShoot) {
       // Richtiger Treffer: grüne Blutlache
       correct++; valCorrect.textContent=correct;
+      highscore++; document.getElementById('val-highscore').textContent=highscore;
       spawnBlood(nx, ny, true);
     } else {
       // Falscher Treffer: rote Blutlache + Shake
@@ -519,6 +528,7 @@
     stopGame(); isGameOver=true;
     goTitle.textContent='GAME OVER'; goSub.textContent='— Es ist für dich VORBEI —';
     goCorrect.textContent=correct; goWrong.textContent=wrong; goLevel.textContent=level;
+    goHighscore.textContent=highscore;
     goSpeedInfo.textContent='';
     goMedalAward.style.display='none';
     // Medaillen anzeigen
@@ -554,7 +564,7 @@
     const perfect=(wrong===0);
     if(perfect){ medals++; }
     goCorrect.textContent=correct; goWrong.textContent=wrong; goLevel.textContent=level;
-    // Medaillenanzeige
+    goHighscore.textContent=highscore;
     goMedalBox.style.display='flex';
     goMedals.textContent=medals;
     if(perfect){
@@ -585,13 +595,14 @@
     resetState(true); goOverlay.classList.add('hidden'); spawnNumber();
   }
   function resetState(keepLevel) {
-    if(!keepLevel){ level=1; currentSpeed=SPEED_X; medals=0; }
+    if(!keepLevel){ level=1; currentSpeed=SPEED_X; medals=0; highscore=0; }
     jokers=MAX_JOKERS; correct=0; wrong=0; roundCount=0;
     maxSoFar=null; currentNumber=null; shotFired=false; transitioning=false;
     gameRunning=true; isGameOver=false; enterAction=null;
     valCorrect.textContent='0'; valWrong.textContent='0';
     valLevel.textContent=level; valRound.textContent=`1/${NUMBERS_PER_ROUND}`;
     document.getElementById('val-medals').textContent=medals;
+    document.getElementById('val-highscore').textContent=highscore;
     buildFuersp();
     flyingEl.style.opacity='1'; flyingEl.style.transform=''; flyingEl.style.transition='';
     cancelAnimationFrame(animFrame);
