@@ -85,7 +85,7 @@
   /* ── OVERLAYS ── */
   /* position:fixed + overflow-y:auto allein reicht nicht zum Scrollen bis ganz oben —
      der Container braucht kein justify-content:center mehr, der Inner-Wrapper übernimmt das */
-  .overlay { position:fixed; inset:0; z-index:100; display:block; overflow-y:auto; background:rgba(6,0,0,.94); backdrop-filter:blur(6px); }
+  .overlay { position:fixed; inset:0; z-index:100; display:block;overflow-x:hidden; overflow-y:auto; background:rgba(6,0,0,.94); backdrop-filter:blur(6px); }
   /* Wrapper: zentriert wenn Inhalt kleiner als Fenster, scrollt vollständig wenn größer */
   .overlay-inner { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100%; padding:clamp(8px,2vh,20px) clamp(10px,3vw,20px); box-sizing:border-box; }
   .overlay.hidden { display:none; }
@@ -801,7 +801,7 @@
   function startGame() {
     resetState(false);
     startOverlay.classList.add('hidden'); goOverlay.classList.add('hidden'); spawnNumber();
-     overlay.style.overflowY = "hidden";
+    //overlay.style.overflowY = "hidden";
   }
 
 function showHelp() {
@@ -809,7 +809,7 @@ function showHelp() {
   resetState(false);
   goOverlay.classList.add('hidden')
   startOverlay.classList.remove('hidden');
-  overlay.style.overflowY = "auto";
+  //overlay.style.overflowY = "auto";
 }
 
   // Boot
