@@ -154,7 +154,7 @@
   
   <div style="font-family:'Special Elite',cursive;color:var(--cream);text-align:center;max-width:520px;line-height:1.2;font-size:clamp(13px,2vw,16px);opacity:.9;margin-top:clamp(10px,2vh,36px); margin-bottom:clamp(10px,2vh,36px);">
     Zahlen fliegen durch das Bild, die du nach ihrer Größe aufsteigend sortieren mußt.<br>
-    Ist eine Zahl <span style="color:var(--red)"><b>nicht größer als alle bisher erschienenen Zahlen</b></span>,<br>muss sie eliminiert werden.<br>
+    Ist eine Zahl <span style="color:var(--red)"><b>nicht größer als alle bisher erschienenen normalen Zahlen</b></span>,<br>muss sie eliminiert werden.<br>
 	AUSSER: <span style="color:var(--red)"><b>die Zahl ist ROT</b></span>, dann ist es eine SUBVERSIVE Zahl,<br> Diese ist das Gegenteil von dem wem, was sie vorgibt!<br>Sie muss eliminiert werden, wenn sie größer ist.<br>
     Du hast <span style="color:var(--gold)">3 Fürsprecher im Politbüro</span>. Nach jedem Fehler verlierst du einen.
     <br><span style="color:var(--red)"><b>Bei 0 Fürsprechern ist es für dich vorbei!</b></span><br>
@@ -278,6 +278,7 @@
   const valLevel    = document.getElementById('val-level');
   const valRound    = document.getElementById('val-round');
   const fuerspRow   = document.getElementById('fuersp-row');
+  const overlay= document.getElementById('overlay');
   const startOverlay= document.getElementById('start-overlay');
   const goOverlay   = document.getElementById('gameover-overlay');
   const goCorrect   = document.getElementById('go-correct');
@@ -677,7 +678,10 @@
       goBtn.textContent='Neu starten';
       goBtn.style.background='var(--red)';
       goBtn.onclick=startGame;
-      goBtn2.style.display='none';
+      //goBtn2.style.display='none';
+      goBtn2.style.display='inline-block';
+      goBtn2.textContent='Hilfe';
+      goBtn2.onclick=showHelp;
       enterAction = startGame;
       goHint.textContent='oder LEERTASTE drücken';
     }
@@ -716,7 +720,7 @@
     else if(acc==2){ goTitle.textContent='AKZEPTABEL'; goSub.textContent='— Es bleibt Raum für Verbesserung —'; }
     else { goTitle.textContent='UNZUVERLÄSSIG'; goSub.textContent='— Bericht wird eingereicht —'; }
     goFuersp.innerHTML='';
-    for(let i=0;i<MAX_JOKERS;i++){ const d=document.createElement('div'); d.className='fuersp-big'+(i>=jokers?' lost':''); d.innerHTML=fuerspSVG(46,58); goFuersp.appendChild(d); }
+    for(let i=0;i<MAX_JOKERS;i++){ const d=document.createElement('div'); d.className='fuersp-big'+(i>=jokers?' lost':''); d.innerHTML=fuerspSVG(32,40); goFuersp.appendChild(d); }
     if (willReduce) {
       goSpeedInfo.innerHTML=`★ Tempo-Belohnung aktiv! Neu: ${newSpeed.toFixed(1)}<br>(Tempo-Reduzierung: ${SPEED_REDUCE_THRESHOLD}/${SPEED_REDUCE_THRESHOLD})`;
     } else {
@@ -797,7 +801,16 @@
   function startGame() {
     resetState(false);
     startOverlay.classList.add('hidden'); goOverlay.classList.add('hidden'); spawnNumber();
+     overlay.style.overflowY = "hidden";
   }
+
+function showHelp() {
+  //returns to start screen
+  resetState(false);
+  goOverlay.classList.add('hidden')
+  startOverlay.classList.remove('hidden');
+  overlay.style.overflowY = "auto";
+}
 
   // Boot
   enterAction = startGame;
