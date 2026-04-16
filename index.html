@@ -97,7 +97,7 @@
   .stat-box.good .value { color:#4eca72; }
   .stat-box.bad  .value { color:var(--red); }
   .stat-box.info .value { color:var(--gold); }
-  #go-speed-info { font-family:'Special Elite',cursive; font-size:clamp(13px,1.5vw,15px); letter-spacing:clamp(1px,0.4vw,3px); color:var(--gold); opacity:.45; margin-bottom:clamp(8px,1.5vh,20px); text-align:center; }
+  #go-speed-info { font-family:'Special Elite',cursive; font-size:clamp(13px,1.5vw,15px); letter-spacing:clamp(1px,0.4vw,3px); color:var(--gold); opacity:1.0; margin-bottom:clamp(8px,1.5vh,20px); text-align:center; }
   #go-fuersp { display:flex; gap:clamp(5px,1vw,10px); margin-bottom:clamp(4px,1vh,20px); }
   #go-fuersp .fuersp-big { width:clamp(22px,5.5vh,46px); height:clamp(28px,7vh,58px); }
   #go-fuersp .fuersp-big.lost { filter:grayscale(1) brightness(0.2); opacity:.25; }
@@ -180,7 +180,7 @@
   </div>
   <div id="go-medal-award" style="display:none; font-family:'Special Elite',cursive; font-size:clamp(12px,2.5vw,18px); color:var(--gold); letter-spacing:4px; margin-bottom:8px; text-align:center;"></div>
   <div id="go-fuersp"></div>
-  <div height="20">&nsbp</div>
+  <div style="height: 20px;"></div>
   <div id="go-speed-info"></div>
   <button class="btn-restart" id="go-btn" onclick="nextRound()">Nächste Runde ▶</button>
   <button class="btn-restart" id="go-btn2" style="display:none; margin-top:10px; background:#555;" onclick="startGame()">Neu starten</button>
@@ -661,7 +661,7 @@
     goMedalBox.style.display='flex';
     goMedals.textContent=medals;
     goFuersp.innerHTML='';
-    for(let i=0;i<MAX_JOKERS;i++){ const d=document.createElement('div'); d.className='fuersp-big'+(i>=jokers?' lost':''); d.innerHTML=fuerspSVG(46,58); goFuersp.appendChild(d); }
+    for(let i=0;i<MAX_JOKERS;i++){ const d=document.createElement('div'); d.className='fuersp-big'+(i>=jokers?' lost':''); d.innerHTML=fuerspSVG(32,40); goFuersp.appendChild(d); }
     if (medals>0) {
       // Retry möglich
       goBtn.textContent=`Level wiederholen (🏅 -1 Medaille)`;
@@ -695,11 +695,8 @@
     let reducedBy=0, newSpeed=currentSpeed;
     if (willReduce) {
       speedScore=0;
-      //reducedBy = Math.min(SPEED_STEP_Y, currentSpeed - SPEED_X);
-      //newSpeed  = Math.max(SPEED_X, currentSpeed - SPEED_STEP_Y);
-	  
-	  reducedBy = (SPEEDREDFAKTOR*level)/10;
-	  newSpeed= currentSpeed - reducedBy;
+      reducedBy = (SPEEDREDFAKTOR*level)/10;
+      newSpeed= currentSpeed - reducedBy;
       currentSpeed = newSpeed;      // sofort setzen
       pendingSpeedReduction = true; // nextRound soll nicht nochmal erhöhen
     }
@@ -721,9 +718,9 @@
     goFuersp.innerHTML='';
     for(let i=0;i<MAX_JOKERS;i++){ const d=document.createElement('div'); d.className='fuersp-big'+(i>=jokers?' lost':''); d.innerHTML=fuerspSVG(46,58); goFuersp.appendChild(d); }
     if (willReduce) {
-      goSpeedInfo.textContent=`★ Tempo-Belohnung aktiv! Neu: ${newSpeed.toFixed(1)} (Punkte: ${SPEED_REDUCE_THRESHOLD}/${SPEED_REDUCE_THRESHOLD})`;
+      goSpeedInfo.innerHTML=`★ Tempo-Belohnung aktiv! Neu: ${newSpeed.toFixed(1)}<br>(Tempo-Reduzierung: ${SPEED_REDUCE_THRESHOLD}/${SPEED_REDUCE_THRESHOLD})`;
     } else {
-      goSpeedInfo.textContent=`Geschwindigkeit ${currentSpeed.toFixed(1)} → Level ${level+1}: ${(currentSpeed+SPEED_STEP_Y).toFixed(1)} (Punkte: ${speedScore}/${SPEED_REDUCE_THRESHOLD})`;
+      goSpeedInfo.innerHTML=`Geschwindigkeit ${currentSpeed.toFixed(1)} → Level ${level+1}: ${(currentSpeed+SPEED_STEP_Y).toFixed(1)}<br>(Tempo-Reduzierung: ${speedScore}/${SPEED_REDUCE_THRESHOLD})`;
     }
     goBtn.textContent='Nächste Runde ▶';
     goBtn.style.background='var(--red)';
