@@ -246,12 +246,15 @@
   const NUMBERS_PER_ROUND    = 12;
   const GUN_HEIGHT_PCT       = 0.20;
   const SUBVERSIVE_MIN       = 3;    // früheste Position der subversiven Zahl (1-basiert)
-  const SUBVERSIVE_MAX       = 10;    // späteste Position der subversiven Zahl (1-basiert)
+  const SUBVERSIVE_MAX       = 11;    // späteste Position der subversiven Zahl (1-basiert)
   const SUBVERSIVE_DISPLAY_MS= 1000; // wie lange die subversive Zahl sichtbar bleibt (ms)
   const SUBVERSIVE_HIGHSCORE = 10;   // Highscore-Punkte für korrekt behandelte subversive Zahl
   const SPEED_REDUCE_THRESHOLD_LANDSCAPE = 100;  // speedScore-Schwellwert Landscape (leichter)
-  const SPEED_REDUCE_THRESHOLD_PORTRAIT  = 80;  // speedScore-Schwellwert Portrait  (schwieriger)
-  const SPEEDREDFAKTOR		 = 1.0;
+  const SPEED_REDUCE_THRESHOLD_PORTRAIT  = 70;  // speedScore-Schwellwert Portrait  (schwieriger)
+  const SPEEDREDFAKTOR		 = 0.8;
+  const SUBVERSIVE_LEVEL_1   = 1;   // ab diesem Level erscheint 1 subversive Zahl pro Runde
+  const SUBVERSIVE_LEVEL_2   = 30;  // ab diesem Level erscheinen 2 subversive Zahlen pro Runde
+  const SUBVERSIVE_LEVEL_3   = 50;  // ab diesem Level erscheinen 3 subversive Zahlen pro Runde
 // ══════════════════════════════════════════════════
   let SPEED_REDUCE_THRESHOLD = SPEED_REDUCE_THRESHOLD_LANDSCAPE; // wird beim Start gesetzt
 
@@ -308,7 +311,7 @@
   let highscore=0;  // läuft über alle Runden, reset nur bei startGame()
   let speedScore=0; // interner Zähler für Temporeduktion — unabhängig vom Highscore
   let pendingSpeedReduction=false; // verhindert doppelte Geschwindigkeitserhöhung in nextRound
-  let subversiveAt=-1;    // roundCount-Index der subversiven Zahl (0-basiert)
+  let subversiveSlots=[];   // roundCount-Indizes der subversiven Zahlen dieser Runde (0-basiert)
   let currentSubversive=false; // true wenn aktuelle Zahl subversiv ist
   let subversiveTimer=null;    // ID des laufenden Subversiv-Timeouts (zum Canceln)
   // Welche Aktion soll Enter auf dem Overlay auslösen?
@@ -388,6 +391,26 @@
   }
 
   function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+  // Bestimmt zufällige, kollisionsfreie Positionen für subversive Zahlen
+  // Position 0 ist immer die Startzahl (flashCenter) → gesperrt
+  function buildSubversiveSlots() {
+    const count = level >= SUBVERSIVE_LEVEL_3 ? 3
+                : level >= SUBVERSIVE_LEVEL_2 ? 2
+                : level >= SUBVERSIVE_LEVEL_1 ? 1
+                : 0;
+    const slots = [];
+    const minPos = SUBVERSIVE_MIN - 1; // 0-basiert
+    const maxPos = SUBVERSIVE_MAX - 1; // 0-basiert
+    // Maximal so viele Slots wie der Bereich hergibt
+    const available = maxPos - minPos + 1;
+    const actualCount = Math.min(count, available);
+    while (slots.length < actualCount) {
+      const pos = randInt(minPos, maxPos);
+      if (!slots.includes(pos)) slots.push(pos);
+    }
+    return slots;
+  }
 
   // ── Mündungsfeuer ──
   function triggerFlash() {
@@ -581,9 +604,8 @@
       return;
     }
 
-    // Subversive Zahl an der vorgesehenen Position?
-    if (roundCount===subversiveAt) {
-      // Subversive Zahl: unabhängig von maxSoFar, zwischen 1-99
+    // Subversive Zahl an einer der vorgesehenen Positionen?
+    if (subversiveSlots.includes(roundCount)) {
       let n=randInt(1,99);
       flashSubversiveNumber(n);
       return;
@@ -789,7 +811,7 @@
     gameRunning=true; isGameOver=false; enterAction=null;
     currentSubversive=false;
     flyingEl.classList.remove('subversive');
-    subversiveAt=randInt(SUBVERSIVE_MIN-1, SUBVERSIVE_MAX-1);
+    subversiveSlots=buildSubversiveSlots();
     valCorrect.textContent='0'; valWrong.textContent='0';
     valLevel.textContent=level; valRound.textContent=`1/${NUMBERS_PER_ROUND}`;
     document.getElementById('val-medals').textContent=medals;
@@ -806,7 +828,7 @@
 
 function showHelp() {
   //returns to start screen
-  resetState(false);
+  //resetState(false);
   goOverlay.classList.add('hidden')
   startOverlay.classList.remove('hidden');
   //overlay.style.overflowY = "auto";
